@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gith"
+version = "0.1.0"
+description = "A Typer-based helper for Git operations"
+authors = [{ name = "Reinaldo J. Menéndez", email = "rejamen@gmail.com" }]
+license = { file = "LICENSE" }
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = ["typer", "rich"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[project.scripts]
+gith = "gith.cli:app"
