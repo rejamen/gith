@@ -4,11 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gith"
-version = "0.1.0"
+version = "0.2.0"
 description = "A Typer-based helper for Git operations"
-authors = [{ name = "Reinaldo J. Menéndez", email = "rejamen@gmail.com" }]
+authors = [
+    { name = "Reinaldo J. Menéndez", email = "rejamen@gmail.com" }
+]
 license = { file = "LICENSE" }
 readme = "README.md"
+
+[project.urls]
+Repository = "https://github.com/rejamen/gith"
+Issues = "https://github.com/rejamen/gith/issues"
+
 requires-python = ">=3.7"
 dependencies = ["typer", "rich"]
 classifiers = [
