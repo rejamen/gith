@@ -18,9 +18,6 @@ dependencies = [
     "rich >=10.11.0"
 ]
 
-[project.urls]
-Repository = "https://github.com/rejamen/gith"
-Issues = "https://github.com/rejamen/gith/issues"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
@@ -32,6 +29,10 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
+
+[project.urls]
+Repository = "https://github.com/rejamen/gith"
+Issues = "https://github.com/rejamen/gith/issues"
 
 [project.scripts]
 gith = "gith.cli:app"
