@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gith"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Typer-based helper for Git operations"
 authors = [
     { name = "Reinaldo J. Menéndez", email = "rejamen@gmail.com" }
@@ -23,6 +23,12 @@ Repository = "https://github.com/rejamen/gith"
 Issues = "https://github.com/rejamen/gith/issues"
 classifiers = [
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
