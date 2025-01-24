@@ -71,7 +71,8 @@ class GithHelper:
         Create a new branch in the Git repository.
 
         1. checkout to the branch if from_branch != 1, else stay in current branch
-        2. pull the latest changes
+        2. pull the latest changes. It might happens that this branch does not exist on the remote, try catch the error,
+        ignore it, and just show an info message. This is not an error that will block the branch creation.
         3. create a new branch from the current branch
         4. checkout to the new branch if checkout is True
 
@@ -87,7 +88,13 @@ class GithHelper:
             self.checkout_to_branch(branches[from_branch - 1], verbose=False)
             current_branch = branches[from_branch - 1]
 
-        self.git_pull(current_branch)
+        try:
+            self.git_pull(current_branch)
+        except Exception:
+            GithMessage(
+                f"Error while pulling from [green]{current_branch}[/green]. This will not block the branch creation.",
+                GithMessageLevel.INFO
+            )
         result = subprocess.run(
             ["git", "branch", branch_name], capture_output=True, text=True
         )
