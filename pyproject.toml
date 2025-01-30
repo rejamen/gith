@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gith"
-version = "0.2.3"
+version = "0.2.4"
 description = "A Typer-based helper for Git operations"
 authors = [
     { name = "Reinaldo J. Menéndez", email = "rejamen@gmail.com" }
@@ -15,7 +15,8 @@ readme = "README.md"
 requires-python = ">=3.7"
 dependencies = [
     "typer>=0.15.1",
-    "rich >=10.11.0"
+    "rich>=10.11.0",
+    "pyyaml>=5.4"
 ]
 
 classifiers = [

@@ -1,5 +1,4 @@
 import subprocess
-import typer
 
 from .console import GithConsole
 from .messages import GithMessage, GithMessageLevel
