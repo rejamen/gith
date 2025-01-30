@@ -146,6 +146,8 @@ gith branch -c this is my branch name with spaces and other separator --name-sep
 ```
 This will replace the spaces with the specified separator: `this-is-my-branch-name-with-spaces-and-other-separator`
 
+If you are not happy with the default separator and do not want to pass the `--name-separator` flag every time no worries, there is a possibility to add a `.githconfig` file and set this value. Continue reading until the section *Using a Configuration file*
+
 In every of the previous cases, **gith** will **automatically checkout to the created branch** 😎
 
 If you want to create your branch, wihtout doing checkout, then just call the command like:
@@ -257,6 +259,21 @@ gith branch -d
 $ gith branch -d
 ```
 And you will get a list of local branches, with their indexes, so you can easily find the indexes without the need of typing an extra command.
+
+## Using a configuration file
+Adding a configuration file to set some default values while using **gith** is also possible. Right now, then only possible parameter to define is the `name_separator` used by the `gith branch -c` command, but in the future we might add other configurables there 😊
+
+In order to change the default value of this command, follow these steps:
+
+Create a file called `.githconfig` on your *Home* folder
+```
+nano ~/.githconfig
+```
+Add in this file the default separator you want to use while creating branches with spaces in the name. 
+```yaml
+name_separator: "-"
+```
+After that, you will be able to use `gith branch -c my branch name with spaces` and your configured separator will be used instead of the default.
 
 ## Final words
 **gith** is built using **Typer**. Big thanks 🙏 to [Sebastián Ramírez](https://github.com/tiangolo) for creating such amazing tool. 

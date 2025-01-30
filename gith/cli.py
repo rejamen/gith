@@ -4,10 +4,31 @@ from typing import List
 
 from .helpers import gith
 from .messages import GithMessage, GithMessageLevel
+from pathlib import Path
+import yaml
 
 app = typer.Typer()
 console = Console()
 
+
+def get_config_path() -> Path:
+    """
+    Get the path to the configuration file.
+    """
+    return Path.home() / ".githconfig"
+
+
+def load_config() -> dict:
+    """
+    Load the configuration file.
+    """
+    config_path = get_config_path()
+    if config_path.exists():
+        with open(config_path, "r") as f:
+            return yaml.safe_load(f)
+    return {}
+
+config = load_config()
 
 def branch_name_autocomplete(ctx: typer.Context, incomplete: str) -> List[str]:
     """
@@ -83,6 +104,8 @@ def branch(
     elif list or not list and not create and not branch_name:
         gith.git_branch()
     elif create:
+        # get name_separator from config file
+        name_separator = config.get("name_separator", False) or name_separator
         name = f"{name_separator}".join(branch_name)
         gith.create_branch(name, from_branch, checkout, name_separator)
         if checkout:
