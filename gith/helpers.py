@@ -1,3 +1,4 @@
+import os
 import subprocess
 
 from .console import GithConsole
@@ -202,5 +203,123 @@ class GithHelper:
             GithMessage(f"Pulling changes from [green]{branch_name}[/green]", GithMessageLevel.LOG)
         else:
             GithMessage(f"{result.stderr}", GithMessageLevel.ERROR)
+
+    def create_repo(self, url: str, config: dict) -> None:
+        """Create a new local repository for the given URL.
+
+        Check first if the command is executed from a folder with the same name as the repository.
+        If not, then create a folder with the repository name and move into it.
+
+        Args:
+            url (str): Repository URL. e.g: git@github.com:rejamen/my_cool_project.git
+            config (dict): Configuration options for the repository.
+        """
+        repo_name = url.split("/")[-1].replace(".git", "")
+        current_folder = os.path.basename(os.getcwd())
+        if current_folder != repo_name:
+            try:
+                os.makedirs(repo_name, exist_ok=True)
+                os.chdir(repo_name)
+                GithMessage(f"Created folder [green]{repo_name}[/green].", GithMessageLevel.LOG)
+            except Exception as e:
+                GithMessage(f"Error creating folder: {e}", GithMessageLevel.ERROR)
+        self.git_init()
+        self.set_main_branch("main")
+        alias = config.get("alias", None)
+        self.add_remote_url(url, alias)
+        set_local_config = config.get('set_local_config', False) in ('True', 'true')
+        if set_local_config:
+            self.set_local_config(config)
+
+    def git_init(self) -> None:
+        """
+        Initialize a new Git repository.
+        """
+        result = subprocess.run(["git", "init"], capture_output=True, text=True)
+        if result.returncode == 0:
+            GithMessage("Git repository initialized.", GithMessageLevel.LOG)
+        else:
+            GithMessage(f"Error initializing Git repository: {result.stderr}", GithMessageLevel.ERROR)
+    
+    def set_main_branch(self, branch_name: str) -> None:
+        """
+        Set the main branch for the Git repository.
+
+        Args:
+            branch_name (str): The name of the main branch.
+        """
+        result = subprocess.run(
+            ["git", "branch", "-M", branch_name], capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            GithMessage(f"Main branch set to [green]{branch_name}[/green]", GithMessageLevel.LOG)
+        else:
+            GithMessage(f"Error setting main branch: {result.stderr}", GithMessageLevel.ERROR)
+    
+    def add_remote_url(self, url: str, alias: str=None) -> None:
+        """
+        Set the remote URL for the Git repository.
+
+        Args:
+            url (str): The remote URL to set.
+            alias (str, optional): The alias for the remote. Defaults to None.
+        """
+        if alias:
+            url = url.replace('github.com', alias)
+        result = subprocess.run(
+            ["git", "remote", "add", "origin", url], capture_output=True, text=True
+        )
+        if result.returncode == 0:
+            GithMessage(f"Remote URL set to [green]{url}[/green]", GithMessageLevel.LOG)
+        else:
+            GithMessage(f"Error setting remote URL: {result.stderr}", GithMessageLevel.ERROR)
+
+    def set_local_config(self, config: dict) -> None:
+        """
+        Set the local config for the Git repository.
+
+        At the moment, only user.name and user.email are supported.
+
+        Args:
+            config (dict): Configuration options for the user data.
+        """
+        user_name = config.get("user_name", None)
+        user_email = config.get("user_email", None)
+        if not user_name or not user_email:
+            GithMessage(
+                "User name and email are required to set local user data. Check your gith.conf file.",
+                GithMessageLevel.ERROR
+            )
+        result = subprocess.run(
+            ["git", "config", "--local", "user.name", user_name],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            GithMessage(
+                f"Local user.name set to [yellow]{user_name}[/yellow]",
+                GithMessageLevel.LOG
+            )
+        else:
+            GithMessage(
+                f"Error setting local user name: {result.stderr}",
+                GithMessageLevel.ERROR
+            )
+        
+        result = subprocess.run(
+            ["git", "config", "--local", "user.email", user_email],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            GithMessage(
+                f"Local user.email set to [yellow]{user_email}[/yellow]",
+                GithMessageLevel.LOG
+            )
+        else:
+            GithMessage(
+                f"Error setting local user email: {result.stderr}",
+                GithMessageLevel.ERROR
+            )
 
 gith = GithHelper()

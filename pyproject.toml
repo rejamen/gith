@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gith"
-version = "0.2.4"
+version = "0.3.0"
 description = "A Typer-based helper for Git operations"
 authors = [
     { name = "Reinaldo J. Menéndez", email = "rejamen@gmail.com" }
