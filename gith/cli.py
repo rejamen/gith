@@ -1,3 +1,5 @@
+import configparser
+import os
 import typer
 from rich.console import Console
 from typing import List
@@ -5,30 +7,20 @@ from typing import List
 from .helpers import gith
 from .messages import GithMessage, GithMessageLevel
 from pathlib import Path
-import yaml
 
 app = typer.Typer()
 console = Console()
 
 
-def get_config_path() -> Path:
-    """
-    Get the path to the configuration file.
-    """
-    return Path.home() / ".githconfig"
-
-
-def load_config() -> dict:
-    """
-    Load the configuration file.
-    """
-    config_path = get_config_path()
-    if config_path.exists():
-        with open(config_path, "r") as f:
-            return yaml.safe_load(f)
+def read_config():
+    config = configparser.ConfigParser()
+    config_path = os.path.join(Path.home() / "gith.conf")
+    if os.path.exists(config_path):
+        config.read(config_path)
+        return {section: dict(config.items(section)) for section in config.sections()}
     return {}
 
-config = load_config()
+config = read_config()
 
 def branch_name_autocomplete(ctx: typer.Context, incomplete: str) -> List[str]:
     """
@@ -105,7 +97,7 @@ def branch(
         gith.git_branch()
     elif create:
         # get name_separator from config file
-        name_separator = config.get("name_separator", False) or name_separator
+        name_separator = config.get("branch", {}).get("name_separator", False) or name_separator
         name = f"{name_separator}".join(branch_name)
         gith.create_branch(name, from_branch, checkout, name_separator)
         if checkout:
@@ -132,6 +124,19 @@ def checkout(
     gith.checkout_to_branch(branch_to_checkout)
     if pull:
         gith.git_pull(branch_to_checkout)
+
+
+@app.command()
+def repo(
+    url: str = typer.Argument(None, help='URL of the repository to create. e.g: git@github.com:john/my_cool_project.git.'),
+):
+    """
+    A helper command to create new Git repositories.
+    """
+    try:
+        gith.create_repo(url, config.get('repo', {}))
+    except Exception as e:
+        GithMessage(e, GithMessageLevel.ERROR)
 
 
 if __name__ == "__main__":

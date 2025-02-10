@@ -7,6 +7,7 @@ Gith is a command-line interface (CLI) tool that simplifies Git operations. Buil
 
 Gith is particularly useful when you:
 
+- Want to initialize a local Git repository with a single command that combines setting the remote URL, local configuration, aliases, and more.
 - Want a clear visual overview of all your local branches with their corresponding index numbers. These **indexes** will be very helpful when using **gith**
 - Need to quickly switch between branches using simple index numbers instead of typing full branch names
 - Work with branches that have long or complex names
@@ -15,6 +16,7 @@ Gith is particularly useful when you:
 - Creating a branch from another branch without the need of checkout to that branch. Use **index** to specify the origin branch instead.
 
 Some examples:
+- After creating a new repository in Github, instead of manually setting main branch name, setting remote url, setting local config (in case you use different user for specific projects), just use `gith repo <url>` and **gith** will set this repo locally for you.
 
 - Instead of `git branch feature_user_auth_middleware`, use `gith branch -c feature user auth middleware`
 
@@ -57,7 +59,8 @@ and you get an output like this one, with an overview of the existing commands i
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ branch     A helper command to work with Git local branches.                                                                      │
-│ checkout   A helper command to checkout to a branch by its index.                                                                 │
+│ checkout   A helper command to checkout to a branch by its index.                                                                 |
+| repo       A helper command to create new Git repositories.                                                                       │
 ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
@@ -237,6 +240,60 @@ When you do checkout to a local branch that was not pushed yet to origin, you wi
 ```
 > The motivation behind this command was to speed up the checkout process, ensuring automatic pull and branch handling by indexes.
 
+## gith repo ...
+
+What features does the **gith repo** command provide? Let's find out!
+```
+gith repo --help
+```
+```shell
+Usage: gith repo [OPTIONS] [URL]                                                                                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                                                                                                                  
+ A helper command to create new Git repositories.                                                                                                                                                                                                                                                                                                                 
+                                                                                                                                                                                                                                                                                                                                                                  
+╭─ Arguments ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│   url      [URL]  URL of the repository to create. e.g: git@github.com:john/my_cool_project.git. [default: None]                                                                                                                                                                                                                                               │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│ --help          Show this message and exit.                                                                                                                                                                                                                                                                                                                    │
+╰────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+```
+
+When creating a new GitHub repo, you typically follow the same steps:
+
+* Create a local folder matching the repo name
+* Run git init
+* Set the default branch: git branch -M main
+* Add the remote: git remote add origin git@github.com:user/my_cool_project.git
+* If you need to configure local settings—like setting user.name and user.email or managing multiple GitHub users via aliases—you also have to adjust the remote URL accordingly.
+
+That's a lot of manual work!
+
+This command automates all these steps into a single line.
+
+
+**The simplest case:**
+ You’ve already created an empty GitHub repo and want to start working on it locally. Just navigate to the desired location and run:
+ ```
+ gith repo git@github.com:<user>/<project_name>.git
+ ```
+This is the same URL GitHub provides after repo creation.
+
+**What does gith do?**
+* Folder check: If you're already inside a folder with the project name, great! If not, **gith** will create it for you.
+* Repo setup: Inside the folder, gith will run all necessary commands:
+    * git init
+    * git branch -M main
+    * git remote add origin <url>
+
+Now you're ready to start coding! 🚀
+
+**Need custom settings?**
+
+For more advanced configurations, such as setting `user.name` and `user.email` locally or handling multiple GitHub users with `aliases`, check the section: Using a configuration file.
+
+> The motivation behind this command was to speed up the local repo creation process. Every time I created a new repository in Github I ended up doing the same: creating a local folder with the same name, `git init`, `git branch -M main`, `git remote add origin <url>`. Also, in some cases I use specific configuration for specific repos, like differente user.name and user.email and use aliases to commit/push under different user. Now we can group all these steps in a simple command. 
+
 ## Enable autocompletion
 
 One of the greatest things of **Typer** is enabling/using autocompletion 🚀
@@ -261,19 +318,30 @@ $ gith branch -d
 And you will get a list of local branches, with their indexes, so you can easily find the indexes without the need of typing an extra command.
 
 ## Using a configuration file
-Adding a configuration file to set some default values while using **gith** is also possible. Right now, then only possible parameter to define is the `name_separator` used by the `gith branch -c` command, but in the future we might add other configurables there 😊
+You can use a configuration file to set default values for **gith**. Some commands will automatically use parameters from this file.
 
-In order to change the default value of this command, follow these steps:
+To create a configuration file, add gith.conf in your *Home* directory:
+```
+nano ~/gith.conf
+```
+With the following structure:
+```ini
+[branch]
+name_separator=-
 
-Create a file called `.githconfig` on your *Home* folder
+[repo]
+set_local_config=True
+user_name=John Doe
+user_email=john@doe
+alias=github-john
 ```
-nano ~/.githconfig
-```
-Add in this file the default separator you want to use while creating branches with spaces in the name. 
-```yaml
-name_separator: -
-```
-After that, you will be able to use `gith branch -c my branch name with spaces` and your configured separator will be used instead of the default.
+This allows gith to apply your preferred settings automatically. 🚀
+
+For this example:
+* The `-` character will be used as separator when creating branches with spaces in the name, instead of the default `_`
+* While using the `gith repo` command:
+    * It will check if local settings are needed, to perform `git config --local user.name` and `git config --local user.email` and set the values specified by **user_name** and **user_email**
+    * It will replace `github.com` for the alias (if the line alias is added in the config file) when setting the remote url for origin. This is helpfull when you use different Github users and you handle which user commit for this repo using aliases.
 
 ## Final words
 **gith** is built using **Typer**. Big thanks 🙏 to [Sebastián Ramírez](https://github.com/tiangolo) for creating such amazing tool. 
