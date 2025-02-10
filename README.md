@@ -271,7 +271,7 @@ nano ~/.githconfig
 ```
 Add in this file the default separator you want to use while creating branches with spaces in the name. 
 ```yaml
-name_separator: "-"
+name_separator: -
 ```
 After that, you will be able to use `gith branch -c my branch name with spaces` and your configured separator will be used instead of the default.
 
