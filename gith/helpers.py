@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import Dict, List, Optional
 
 from .console import GithConsole
 from .messages import GithMessage, GithMessageLevel
@@ -25,35 +26,90 @@ class GithHelper:
         Args:
             verbose (bool, optional): Print the branches in a table. Defaults to True.
         """
-        current = []
-        others = []
-        result = subprocess.run(["git", "branch"], capture_output=True, text=True)
-        for branch in result.stdout.split("\n"):
-            if branch.strip():
-                name = branch.strip()
-                if name.startswith("*"):
-                    current.append(name.replace('*', '').strip())
-                else:
-                    others.append(name)
-        branches = current + sorted(others)
+        head_result = subprocess.run(
+            ["git", "symbolic-ref", "--quiet", "--short", "HEAD"],
+            capture_output=True, text=True,
+        )
+        current_branch = head_result.stdout.strip() if head_result.returncode == 0 else ""
+
+        result = subprocess.run(
+            ["git", "for-each-ref", "--format=%(refname:short)%00%(objectname)", "refs/heads"],
+            capture_output=True, text=True,
+        )
+        branch_shas = {}
+        for line in result.stdout.split("\n"):
+            if not line.strip():
+                continue
+            name, _, sha = line.partition("\0")
+            branch_shas[name] = sha
+
+        others = sorted(name for name in branch_shas if name != current_branch)
+        branches = ([current_branch] if current_branch else []) + others
+
         if verbose:
-            self.print_branches(branches)
+            tags_by_commit = self._get_tags_by_commit()
+            branch_tags = {
+                name: tags_by_commit.get(branch_shas.get(name, ""), [])
+                for name in branches
+            }
+            self.print_branches(branches, branch_tags)
         return branches
-    
-    def print_branches(self, branches: list) -> None:
+
+    def _get_tags_by_commit(self) -> Dict[str, List[str]]:
+        """
+        Return a mapping of commit SHA -> list of tag names pointing at that commit.
+
+        Annotated tags are dereferenced via %(*objectname) so the mapping uses the
+        target commit SHA, not the tag object SHA.
+        """
+        result = subprocess.run(
+            [
+                "git", "for-each-ref",
+                "--format=%(refname:short)%00%(objectname)%00%(*objectname)",
+                "refs/tags",
+            ],
+            capture_output=True, text=True,
+        )
+        tags_by_commit = {}
+        for line in result.stdout.split("\n"):
+            if not line.strip():
+                continue
+            parts = line.split("\0")
+            if len(parts) < 2:
+                continue
+            tag_name = parts[0]
+            obj_sha = parts[1]
+            peeled_sha = parts[2] if len(parts) > 2 else ""
+            commit_sha = peeled_sha or obj_sha
+            tags_by_commit.setdefault(commit_sha, []).append(tag_name)
+        return tags_by_commit
+
+    def print_branches(
+        self,
+        branches: list,
+        branch_tags: Optional[Dict[str, List[str]]] = None,
+    ) -> None:
         """
         Print the branches in a formatted table.
 
         Args:
             branches (list[str]): List of branch names
+            branch_tags (dict[str, list[str]] | None): Mapping of branch name to the
+                tags pointing at that branch's latest commit.
         """
+        branch_tags = branch_tags or {}
         columns = [
             {"name": "Index", "justify": "right"},
             {"name": "Branch Name", "justify": "left"},
+            {"name": "Tags", "justify": "left"},
         ]
         rows = [
             {
-                "data": [str(index), branch],
+                "data": [
+                    str(index),
+                    branch,
+                    ", ".join(branch_tags.get(branch, [])),
+                ],
                 "style": f"{'green' if index == 1 else 'default'}"
             }
             for index, branch in enumerate(branches, start=1)
