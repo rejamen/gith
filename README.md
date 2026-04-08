@@ -111,17 +111,18 @@ In any case, the result will be a table where:
 * Every branch will have an associated **index**.
 * The first branch (**index = 1**) will always be the current branch and will be highlighted in green.
 * The remaining branches will be listed in alphabetical order.
+* The **Tags** column shows any git tags pointing at the latest commit of each branch (handy to see at a glance which branches are sitting on a release tag). The cell is empty when the branch tip has no tag.
 
 ```bash
-┏━━━━━━━┳━━━━━━━━━━━━━━━┓
-┃ Index ┃ Branch Name   ┃
-┡━━━━━━━╇━━━━━━━━━━━━━━━┩
-│     1 │ release_0.2.0 │
-│     2 │ test_a        │
-│     3 │ test_b        │
-│     4 │ test_c        │
-│     5 │ test_d        │
-└───────┴───────────────┘
+┏━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┓
+┃ Index ┃ Branch Name   ┃ Tags        ┃
+┡━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━┩
+│     1 │ release_0.2.0 │ v0.2.0      │
+│     2 │ test_a        │             │
+│     3 │ test_b        │             │
+│     4 │ test_c        │ v0.1.0-rc1  │
+│     5 │ test_d        │             │
+└───────┴───────────────┴─────────────┘
 ```
 
 > The primary motivation for this command is to display all local branches with an assigned **index**. This index can then be used for various operations on the branch, eliminating the need to use the branch name. Additionally, listing the current branch at the top of the list, rather than the default Git method of marking it with an asterisk (*) and placing it alphabetically, makes it easier to locate when there are many local branches.
