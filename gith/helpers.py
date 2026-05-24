@@ -9,6 +9,15 @@ from .messages import GithMessage, GithMessageLevel
 console = GithConsole()
 
 
+def _as_bool(value) -> bool:
+    """Coerce a config value to a bool, accepting common truthy strings."""
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    return str(value).strip().lower() in ("true", "yes", "on", "1")
+
+
 class GithHelper:
     def validate_git_repo(self) -> None:
         """
@@ -284,7 +293,7 @@ class GithHelper:
         self.set_main_branch("main")
         alias = config.get("alias", None)
         self.add_remote_url(url, alias)
-        set_local_config = config.get('set_local_config', False) in ('True', 'true')
+        set_local_config = _as_bool(config.get('set_local_config', False))
         if set_local_config:
             self.set_local_config(config)
 

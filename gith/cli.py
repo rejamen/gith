@@ -1,7 +1,8 @@
 import configparser
 import os
+import sys
 from pathlib import Path
-from typing import List, Optional
+from typing import Iterable, List, Optional
 
 import typer
 from rich.console import Console
@@ -16,12 +17,19 @@ console = Console()
 def read_config():
     config = configparser.ConfigParser()
     config_path = os.path.join(Path.home() / "gith.conf")
-    if os.path.exists(config_path):
+    if not os.path.exists(config_path):
+        return {}
+    try:
         config.read(config_path)
-        return {section: dict(config.items(section)) for section in config.sections()}
-    return {}
+    except configparser.Error as exc:
+        GithMessage(
+            f"Could not parse config file [yellow]{config_path}[/yellow]: {exc}",
+            GithMessageLevel.ERROR,
+        )
+    return {section: dict(config.items(section)) for section in config.sections()}
 
-config = read_config()
+
+config = {}
 
 def branch_name_autocomplete(ctx: typer.Context, incomplete: str) -> List[str]:
     """
@@ -161,5 +169,75 @@ def repo(
         GithMessage(e, GithMessageLevel.ERROR)
 
 
-if __name__ == "__main__":
+def _known_commands() -> set:
+    """Return the set of command names registered on the Typer app."""
+    names = set()
+    for cmd in app.registered_commands:
+        name = cmd.name or (cmd.callback.__name__ if cmd.callback else None)
+        if name:
+            names.add(name)
+    return names
+
+
+_PASSTHROUGH_FLAGS = {
+    "--help", "-h",
+    "--version",
+    "--install-completion",
+    "--show-completion",
+}
+
+
+def _resolve_default_argv(
+    argv: List[str],
+    known_commands: Iterable[str],
+    cfg: dict,
+) -> List[str]:
+    """Return argv, possibly prepended with the default command from config.
+
+    Rules:
+    - If a known command is already present as the first arg, leave argv alone.
+    - If the first arg is a top-level help/version flag, leave argv alone.
+    - Otherwise, if [default].command is set, prepend it; if the configured
+      command name is unknown, surface a clean error and exit non-zero.
+    - If no default is configured, leave argv alone (Typer will show its
+      usual "Missing command" error).
+    """
+    known = set(known_commands)
+    default_cmd = (cfg.get("default", {}) or {}).get("command", "").strip()
+
+    if argv and argv[0] in known:
+        return argv
+    if argv and argv[0] in _PASSTHROUGH_FLAGS:
+        return argv
+
+    if not default_cmd:
+        return argv
+
+    if default_cmd not in known:
+        GithMessage(
+            (
+                f"Unknown default command [yellow]{default_cmd}[/yellow] in "
+                f"[yellow]~/gith.conf[/yellow] under section [yellow]\\[default][/yellow]. "
+                f"Known commands: {', '.join(sorted(known))}."
+            ),
+            GithMessageLevel.ERROR,
+        )
+
+    return [default_cmd, *argv]
+
+
+def main():
+    global config
+    try:
+        config = read_config()
+        sys.argv = [
+            sys.argv[0],
+            *_resolve_default_argv(sys.argv[1:], _known_commands(), config),
+        ]
+    except typer.Abort:
+        raise SystemExit(1)
     app()
+
+
+if __name__ == "__main__":
+    main()
