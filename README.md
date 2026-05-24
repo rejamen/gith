@@ -35,6 +35,14 @@ No need to memorize commands. Gith leverages Typer's built-in help system and sh
 
 ## Installation
 
+With [uv](https://docs.astral.sh/uv/) (recommended), to install **gith** as a global tool:
+
+```bash
+uv tool install gith
+```
+
+Or with `pip`:
+
 ```bash
 pip install gith
 ```
@@ -150,7 +158,7 @@ gith branch -c this is my branch name with spaces and other separator --name-sep
 ```
 This will replace the spaces with the specified separator: `this-is-my-branch-name-with-spaces-and-other-separator`
 
-If you are not happy with the default separator and do not want to pass the `--name-separator` flag every time no worries, there is a possibility to add a `.githconfig` file and set this value. Continue reading until the section *Using a Configuration file*
+If you are not happy with the default separator and do not want to pass the `--name-separator` flag every time no worries, there is a possibility to add a `gith.conf` file and set this value. Continue reading until the section *Using a Configuration file*
 
 In every of the previous cases, **gith** will **automatically checkout to the created branch** 😎
 
@@ -335,6 +343,9 @@ nano ~/gith.conf
 ```
 With the following structure:
 ```ini
+[default]
+command=branch
+
 [branch]
 name_separator=-
 
@@ -347,10 +358,46 @@ alias=github-john
 This allows gith to apply your preferred settings automatically. 🚀
 
 For this example:
+* The `[default]` section sets the command to run when **gith** is called with no subcommand. With `command=branch`, running `gith` is equivalent to `gith branch`. Extra flags are forwarded, so `gith --create my new branch` behaves like `gith branch --create my new branch`. If `command` names an unknown command, **gith** exits with a clear error. Omit this section entirely to keep the original behavior (bare `gith` shows a "Missing command" error).
 * The `-` character will be used as separator when creating branches with spaces in the name, instead of the default `_`
 * While using the `gith repo` command:
-    * It will check if local settings are needed, to perform `git config --local user.name` and `git config --local user.email` and set the values specified by **user_name** and **user_email**
+    * It will check if local settings are needed, to perform `git config --local user.name` and `git config --local user.email` and set the values specified by **user_name** and **user_email**. `set_local_config` accepts the common truthy values: `true`, `yes`, `on`, `1` (case-insensitive).
     * It will replace `github.com` for the alias (if the line alias is added in the config file) when setting the remote url for origin. This is helpfull when you use different Github users and you handle which user commit for this repo using aliases.
+
+## Development
+
+The project supports both [uv](https://docs.astral.sh/uv/) (recommended) and a plain `pip` + `venv` workflow. Pick whichever you prefer.
+
+### With uv (recommended)
+
+After cloning:
+```sh
+uv sync
+```
+This creates a `.venv/` (Python version pinned in `.python-version`) and installs **gith** in editable mode along with its dependencies from `uv.lock`.
+
+Run the CLI without activating the venv:
+```sh
+uv run gith --help
+uv run gith branch
+```
+
+Run arbitrary Python against the project env:
+```sh
+uv run python -c "from gith.cli import _known_commands; print(_known_commands())"
+```
+
+When you change `pyproject.toml` dependencies, re-run `uv sync` to refresh `.venv` and `uv.lock`.
+
+### With pip
+
+```sh
+python -m venv venv
+source venv/bin/activate
+pip install -e .
+gith --help
+```
+With this flow the deps are resolved fresh from `pyproject.toml` (no lock file is consulted).
 
 ## Final words
 **gith** is built using **Typer**. Big thanks 🙏 to [Sebastián Ramírez](https://github.com/tiangolo) for creating such amazing tool. 
